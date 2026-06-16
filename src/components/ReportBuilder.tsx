@@ -27,13 +27,9 @@ export function ReportBuilder({ onNavigate }: Props) {
   const [layout, setLayout] = useState<LayoutType>(6);
 
   const handleNext = async () => {
-    if (step === 1) {
+        if (step === 1) {
       if (selectedPhotos.size === 0) {
         toast.error("Please select at least one photo");
-        return;
-      }
-      if (!reportName.trim()) {
-        toast.error("Please enter a report name");
         return;
       }
       setStep(2);
@@ -44,9 +40,9 @@ export function ReportBuilder({ onNavigate }: Props) {
         setExporting(true);
         
         const draft = await createDraft({
-          reportName,
-          projectName,
-          inspectorName,
+          reportName: `Report ${new Date().toLocaleDateString().replace(/\//g, "-")}`,
+          projectName: "",
+          inspectorName: "",
           clientName: "",
           reportDate: new Date().toLocaleDateString(),
         });
@@ -92,31 +88,6 @@ export function ReportBuilder({ onNavigate }: Props) {
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {step === 1 ? (
           <>
-            <div className="space-y-4">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Report Info</h2>
-              <input
-                type="text"
-                placeholder="Report Name *"
-                value={reportName}
-                onChange={(e) => setReportName(e.target.value)}
-                className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20"
-              />
-              <input
-                type="text"
-                placeholder="Project Name"
-                value={projectName}
-                onChange={(e) => setProjectName(e.target.value)}
-                className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20"
-              />
-              <input
-                type="text"
-                placeholder="Inspector Name"
-                value={inspectorName}
-                onChange={(e) => setInspectorName(e.target.value)}
-                className="w-full bg-card border border-border rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Select Photos</h2>
