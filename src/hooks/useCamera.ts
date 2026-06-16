@@ -12,7 +12,7 @@ export function useCamera() {
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+        video: { facingMode, width: { ideal: 4096 }, height: { ideal: 2160 } },
         audio: false,
       });
       streamRef.current = stream;
@@ -20,9 +20,9 @@ export function useCamera() {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
-      setIsActive(true);
+      if (isMounted.current) setIsActive(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Camera not accessible");
+      if (isMounted.current) setError(err instanceof Error ? err.message : "Camera not accessible");
     }
   }, [facingMode]);
 
@@ -40,7 +40,7 @@ export function useCamera() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext("2d")?.drawImage(video, 0, 0);
-      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.95);
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 1.0);
     });
   }, []);
 
