@@ -128,7 +128,7 @@ export async function generatePPTX(
           slide.addImage({
             data: imgData.startsWith("data:") ? imgData : undefined,
             path: !imgData.startsWith("data:") ? imgData : undefined,
-            x: imgX, y: imgY, w: imgW, h: imgH,
+            x: imgX, y: imgY,
             sizing: { type: "contain", w: imgW, h: imgH },
           });
         }
