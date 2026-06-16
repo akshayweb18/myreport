@@ -29,36 +29,13 @@ export function CameraCapture({ onClose }: Props) {
 
     try {
       const blob = await capture();
-      if (!blob) return;
+      if (!blob) {
+        setCapturing(false);
+        return;
+      }
 
-      const thumbnail = await createThumbnail(blob);
-      // Compress the raw 4K PNG to a high-quality 1920px JPEG to ensure lightning-fast uploads
-      const compressed = await compressImage(blob, 1920, 0.85);
-
-      const location = await getCurrentLocation();
-      const id = generateId();
-      const now = Date.now();
-      captureCountRef.current += 1;
-
-      const photo: PhotoRecord = {
-        id,
-        title: `Photo ${captureCountRef.current}`,
-        comment: "",
-        location,
-        createdAt: now,
-        syncStatus: "pending",
-        order: now,
-        imageBlob: compressed,
-        thumbnailBlob: thumbnail,
-      };
-
-      await addPhoto(photo);
-
-      // Queue upload
-      enqueue(id, compressed, `reports/photos/${id}.jpg`);
-
-      // Show thumbnail flash
-      const thumbUrl = URL.createObjectURL(thumbnail);
+      // 1. Instant Visual Feedback
+      const thumbUrl = URL.createObjectURL(blob);
       setRecentThumb(thumbUrl);
       setTimeout(() => {
         URL.revokeObjectURL(thumbUrl);
@@ -67,9 +44,41 @@ export function CameraCapture({ onClose }: Props) {
 
       setCapturedCount((c) => c + 1);
       toast.success("Photo captured!");
+      
+      // 2. Unblock UI immediately so user can take next photo
+      setCapturing(false);
+
+      // 3. Process heavy compression and upload in background
+      (async () => {
+        try {
+          const thumbnail = await createThumbnail(blob);
+          const compressed = await compressImage(blob, 1920, 0.85);
+          const location = await getCurrentLocation();
+          const id = generateId();
+          const now = Date.now();
+          captureCountRef.current += 1;
+
+          const photo: PhotoRecord = {
+            id,
+            title: `Photo ${captureCountRef.current}`,
+            comment: "",
+            location,
+            createdAt: now,
+            syncStatus: "pending",
+            order: now,
+            imageBlob: compressed,
+            thumbnailBlob: thumbnail,
+          };
+
+          await addPhoto(photo);
+          enqueue(id, compressed, `reports/photos/${id}.jpg`);
+        } catch (err) {
+          console.error("Background processing failed", err);
+        }
+      })();
+
     } catch {
       toast.error("Failed to capture photo");
-    } finally {
       setCapturing(false);
     }
   };
