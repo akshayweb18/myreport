@@ -37,26 +37,14 @@ export function useCamera() {
       const video = videoRef.current;
       if (!video) return resolve(null);
 
-      let sourceW = video.videoWidth;
-      let sourceH = video.videoHeight;
-      let startX = 0;
-      let startY = 0;
-
-      // Force horizontal (landscape) aspect ratio. If portrait, crop center.
-      if (sourceH > sourceW) {
-        sourceH = Math.round(sourceW * 0.75); // 4:3 horizontal ratio
-        startY = (video.videoHeight - sourceH) / 2;
-      }
+      const sourceW = video.videoWidth;
+      const sourceH = video.videoHeight;
 
       const canvas = document.createElement("canvas");
       canvas.width = sourceW;
       canvas.height = sourceH;
       
-      canvas.getContext("2d")?.drawImage(
-        video,
-        startX, startY, sourceW, sourceH, // Source crop
-        0, 0, sourceW, sourceH // Destination
-      );
+      canvas.getContext("2d")?.drawImage(video, 0, 0, sourceW, sourceH);
       
       canvas.toBlob((blob) => resolve(blob), "image/png");
     });
