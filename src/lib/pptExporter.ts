@@ -125,8 +125,9 @@ export async function generatePPTX(
         }
 
         if (imgData) {
+          const base64Data = imgData.startsWith("data:") ? imgData.replace(/^data:/, "") : undefined;
           slide.addImage({
-            data: imgData.startsWith("data:") ? imgData : undefined,
+            data: base64Data,
             path: !imgData.startsWith("data:") ? imgData : undefined,
             x: imgX, y: imgY,
             sizing: { type: "contain", w: imgW, h: imgH },
