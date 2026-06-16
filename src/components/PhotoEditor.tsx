@@ -1,10 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save, Trash2, MapPin, Tag, Copy, Share2, FileText } from "lucide-react";
+import { ArrowLeft, Save, Trash2, MapPin, Tag, Copy, Share2, FileText, RotateCw } from "lucide-react";
 import { usePhotosStore } from "@/stores/photosStore";
 import { useReportsStore } from "@/stores/reportsStore";
+import { useUploadStore } from "@/stores/uploadStore";
 import type { PhotoMetadata } from "@/types";
-import { generateId } from "@/lib/imageUtils";
+import { generateId, rotateImageBlob, createThumbnail } from "@/lib/imageUtils";
 import { getPhoto } from "@/lib/db";
 import { toast } from "sonner";
 
@@ -14,10 +15,12 @@ interface Props {
 }
 
 export function PhotoEditor({ photo, onClose }: Props) {
-  const { updatePhotoMeta, removePhoto, addPhoto } = usePhotosStore();
+  const { updatePhotoMeta, updatePhotoBlobs, removePhoto, addPhoto } = usePhotosStore();
+  const { enqueue } = useUploadStore();
   const [title, setTitle] = useState(photo.title);
   const [comment, setComment] = useState(photo.comment);
   const [category, setCategory] = useState(photo.category || "");
+  const [isRotating, setIsRotating] = useState(false);
 
   const handleSave = async () => {
     await updatePhotoMeta(photo.id, { title, comment, category });
@@ -51,6 +54,34 @@ export function PhotoEditor({ photo, onClose }: Props) {
       onClose();
     } catch {
       toast.error("Failed to duplicate photo");
+    }
+  };
+
+  const handleRotate = async () => {
+    try {
+      setIsRotating(true);
+      const toastId = toast.loading("Rotating image...");
+      
+      const record = await getPhoto(photo.id);
+      if (!record || !record.imageBlob) throw new Error("Image data not found");
+      
+      // Rotate the main blob
+      const rotatedBlob = await rotateImageBlob(record.imageBlob);
+      // Re-generate thumbnail from rotated blob
+      const newThumbnail = await createThumbnail(rotatedBlob);
+      
+      // Update IndexedDB & Zustand store
+      await updatePhotoBlobs(photo.id, rotatedBlob, newThumbnail);
+      
+      // Re-queue upload for the new rotated image
+      enqueue(photo.id, rotatedBlob, `reports/photos/${photo.id}.jpg`);
+      
+      toast.success("Image rotated", { id: toastId });
+    } catch (err) {
+      toast.error("Failed to rotate image");
+      console.error(err);
+    } finally {
+      setIsRotating(false);
     }
   };
 
@@ -128,9 +159,18 @@ export function PhotoEditor({ photo, onClose }: Props) {
 
       <div className="flex-1 overflow-y-auto">
         {/* ── Image Preview ── */}
-        <div className="bg-muted aspect-video w-full relative">
+        <div className="bg-muted aspect-video w-full relative overflow-hidden flex items-center justify-center">
           {photo.localBlobUrl && (
-             <img src={photo.localBlobUrl} alt={photo.title} className="w-full h-full object-contain" />
+             <img 
+               src={photo.localBlobUrl} 
+               alt={photo.title} 
+               className={`w-full h-full object-contain transition-opacity duration-300 ${isRotating ? "opacity-50" : "opacity-100"}`} 
+             />
+          )}
+          {isRotating && (
+             <div className="absolute inset-0 flex items-center justify-center">
+               <RotateCw className="w-8 h-8 text-white animate-spin drop-shadow-md" />
+             </div>
           )}
         </div>
 
@@ -182,18 +222,21 @@ export function PhotoEditor({ photo, onClose }: Props) {
       </div>
 
       {/* ── Actions ── */}
-      <div className="border-t border-border bg-background p-4 safe-bottom grid grid-cols-4 gap-2">
-        <button onClick={handleDelete} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-destructive/10 text-destructive font-medium text-xs">
-          <Trash2 className="w-5 h-5" /> Delete
+      <div className="border-t border-border bg-background p-4 safe-bottom grid grid-cols-5 gap-2">
+        <button onClick={handleDelete} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-destructive/10 text-destructive font-medium text-[10px]">
+          <Trash2 className="w-4 h-4" /> Delete
         </button>
-        <button onClick={handleQuickPPT} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-blue-500/10 text-blue-600 font-medium text-xs">
-          <FileText className="w-5 h-5" /> PPTX
+        <button onClick={handleRotate} disabled={isRotating} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-orange-500/10 text-orange-600 font-medium text-[10px] disabled:opacity-50">
+          <RotateCw className="w-4 h-4" /> Rotate
         </button>
-        <button onClick={handleShare} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-green-500/10 text-green-600 font-medium text-xs">
-          <Share2 className="w-5 h-5" /> Share
+        <button onClick={handleQuickPPT} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-blue-500/10 text-blue-600 font-medium text-[10px]">
+          <FileText className="w-4 h-4" /> PPTX
         </button>
-        <button onClick={handleDuplicate} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium text-xs">
-          <Copy className="w-5 h-5" /> Copy
+        <button onClick={handleShare} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-green-500/10 text-green-600 font-medium text-[10px]">
+          <Share2 className="w-4 h-4" /> Share
+        </button>
+        <button onClick={handleDuplicate} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium text-[10px]">
+          <Copy className="w-4 h-4" /> Copy
         </button>
       </div>
     </div>

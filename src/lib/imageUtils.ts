@@ -111,3 +111,41 @@ export function getCurrentLocation(): Promise<string> {
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
+
+/**
+ * Rotate an image blob by 90 degrees clockwise
+ */
+export function rotateImageBlob(blob: Blob): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalHeight;
+      canvas.height = img.naturalWidth;
+      
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        reject(new Error("Canvas context unavailable"));
+        return;
+      }
+      
+      // Rotate 90 degrees clockwise
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate((90 * Math.PI) / 180);
+      ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+      
+      URL.revokeObjectURL(url);
+      canvas.toBlob((b) => {
+        if (b) resolve(b);
+        else reject(new Error("Canvas toBlob failed"));
+      }, blob.type || "image/jpeg", 0.95);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Image failed to load for rotation"));
+    };
+    img.src = url;
+  });
+}

@@ -20,6 +20,7 @@ interface PhotosState {
   loadPhotos: () => Promise<void>;
   addPhoto: (photo: PhotoRecord) => Promise<void>;
   updatePhotoMeta: (id: string, updates: Partial<PhotoMetadata>) => Promise<void>;
+  updatePhotoBlobs: (id: string, imageBlob: Blob, thumbnailBlob: Blob) => Promise<void>;
   removePhoto: (id: string) => Promise<void>;
   bulkRemove: (ids: string[]) => Promise<void>;
   toggleSelect: (id: string) => void;
@@ -71,6 +72,20 @@ export const usePhotosStore = create<PhotosState>()((set, get) => ({
     await updatePhoto(id, updates);
     set((state) => ({
       photos: state.photos.map((p) => (p.id === id ? { ...p, ...updates } : p)),
+    }));
+  },
+
+  updatePhotoBlobs: async (id, imageBlob, thumbnailBlob) => {
+    const photo = get().photos.find((p) => p.id === id);
+    if (photo?.localBlobUrl) URL.revokeObjectURL(photo.localBlobUrl);
+    
+    const newBlobUrl = URL.createObjectURL(imageBlob);
+    await updatePhoto(id, { imageBlob, thumbnailBlob, syncStatus: "pending" });
+    
+    set((state) => ({
+      photos: state.photos.map((p) => 
+        p.id === id ? { ...p, localBlobUrl: newBlobUrl, syncStatus: "pending" } : p
+      ),
     }));
   },
 
