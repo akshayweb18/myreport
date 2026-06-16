@@ -84,11 +84,12 @@ export async function generatePPTX(
   const slideW = isLandscape ? SLIDE_W_LANDSCAPE : SLIDE_W_PORTRAIT;
   const slideH = isLandscape ? SLIDE_H_LANDSCAPE : SLIDE_H_PORTRAIT;
 
-  pptx.layout = isLandscape ? "LAYOUT_WIDE" : "LAYOUT_4x3";
-  pptx.author = draft.info.inspectorName;
-  pptx.company = draft.info.projectName;
-  pptx.subject = draft.info.reportName;
-  pptx.title = draft.info.reportName;
+  pptx.defineLayout({ name: "PORTRAIT", width: SLIDE_W_PORTRAIT, height: SLIDE_H_PORTRAIT });
+  pptx.layout = isLandscape ? "LAYOUT_WIDE" : "PORTRAIT";
+  pptx.author = draft.info.inspectorName || "";
+  pptx.company = draft.info.projectName || "";
+  pptx.subject = draft.info.reportName || "";
+  pptx.title = draft.info.reportName || "";
 
   const totalSlides = draft.slides.length;
 
