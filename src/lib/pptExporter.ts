@@ -24,20 +24,40 @@ function blobToCanvasPng(blob: Blob): Promise<string> {
 
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
+      
+      // Resize to max 1280px to prevent PowerPoint memory overload (which causes grayscale/broken images)
+      const MAX_SIZE = 1280;
+      let width = img.naturalWidth;
+      let height = img.naturalHeight;
+      
+      if (width > MAX_SIZE || height > MAX_SIZE) {
+        if (width > height) {
+          height = Math.round((height * MAX_SIZE) / width);
+          width = MAX_SIZE;
+        } else {
+          width = Math.round((width * MAX_SIZE) / height);
+          height = MAX_SIZE;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         URL.revokeObjectURL(url);
         reject(new Error("Canvas context unavailable"));
         return;
       }
-      // White background prevents transparency artifacts
+      
+      // Draw on white background
       ctx.fillStyle = "#FFFFFF";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, 0, 0);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL("image/png"));
+      
+      // Export as high-quality JPEG (much smaller file size than PNG, perfect for PPT)
+      resolve(canvas.toDataURL("image/jpeg", 0.9));
     };
 
     img.onerror = () => {
