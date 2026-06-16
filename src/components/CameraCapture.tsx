@@ -4,7 +4,7 @@ import { X, RotateCcw, Zap, CheckCircle, AlertCircle } from "lucide-react";
 import { useCamera } from "@/hooks/useCamera";
 import { usePhotosStore } from "@/stores/photosStore";
 import { useUploadStore } from "@/stores/uploadStore";
-import { compressImage, createThumbnail, generateId, getCurrentLocation } from "@/lib/imageUtils";
+import { compressImage, fastThumbnail, generateId, getCurrentLocation } from "@/lib/imageUtils";
 import type { PhotoRecord } from "@/types";
 import { toast } from "sonner";
 
@@ -48,15 +48,15 @@ export function CameraCapture({ onClose }: Props) {
       // 2. Unblock UI immediately so user can take next photo
       setCapturing(false);
 
-      // 3. Process in background - store original quality locally, upload compressed for speed
+      // 3. Save to gallery INSTANTLY, then process in background
       (async () => {
         try {
-          const thumbnail = await createThumbnail(blob);
           const location = await getCurrentLocation();
           const id = generateId();
           const now = Date.now();
           captureCountRef.current += 1;
 
+          // --- Step A: Add to gallery immediately (no wait for compression) ---
           const photo: PhotoRecord = {
             id,
             title: `Photo ${captureCountRef.current}`,
@@ -65,14 +65,19 @@ export function CameraCapture({ onClose }: Props) {
             createdAt: now,
             syncStatus: "pending",
             order: now,
-            imageBlob: blob,         // Store original quality for PPT
-            thumbnailBlob: thumbnail,
+            imageBlob: blob,          // Original quality for PPT
+            thumbnailBlob: blob,      // Use original as thumb placeholder
           };
-
-          // Save to IndexedDB & update UI
           await addPhoto(photo);
 
-          // Compress to 1280px JPEG for fast cloud upload (smaller file = faster upload)
+          // --- Step B: Fast canvas thumbnail (~50ms) ---
+          const thumbnail = await fastThumbnail(blob, 400);
+          // Update the thumb in DB silently
+          import("@/lib/db").then(({ updatePhoto }) =>
+            updatePhoto(id, { thumbnailBlob: thumbnail })
+          );
+
+          // --- Step C: Compress for upload (web worker, non-blocking) ---
           const uploadBlob = await compressImage(blob, 1280, 0.82);
           enqueue(id, uploadBlob, `reports/photos/${id}.jpg`);
         } catch (err) {

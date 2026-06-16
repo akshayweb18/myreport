@@ -12,7 +12,7 @@ export async function compressImage(
   const compressed = await imageCompression(file, {
     maxSizeMB: 2,
     maxWidthOrHeight,
-    useWebWorker: false,
+    useWebWorker: true,  // Run in web worker - never blocks main UI thread
     initialQuality: quality,
     fileType: "image/jpeg",
   });
@@ -20,10 +20,38 @@ export async function compressImage(
 }
 
 /**
+ * Ultra-fast thumbnail using canvas (no library overhead).
+ * ~50ms vs ~500ms for browser-image-compression.
+ */
+export function fastThumbnail(blob: Blob, size = 400): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(size / img.naturalWidth, size / img.naturalHeight, 1);
+      const w = Math.round(img.naturalWidth * scale);
+      const h = Math.round(img.naturalHeight * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d")?.drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("toBlob failed"))),
+        "image/jpeg",
+        0.75
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("img load failed")); };
+    img.src = url;
+  });
+}
+
+/**
  * Create a small thumbnail blob for gallery display
  */
 export async function createThumbnail(blob: Blob): Promise<Blob> {
-  return compressImage(blob, 400, 0.7);
+  return fastThumbnail(blob, 400);
 }
 
 /**
