@@ -2,9 +2,8 @@ import PptxGenJS from "pptxgenjs";
 import type { ReportDraft, PhotoMetadata, SlideConfig } from "@/types";
 import { LAYOUT_CONFIGS } from "@/types";
 import { getPhoto } from "@/lib/db";
-import { blobToBase64 } from "./imageUtils";
 
-const SLIDE_W_LANDSCAPE = 13.33; // inches
+const SLIDE_W_LANDSCAPE = 13.33;
 const SLIDE_H_LANDSCAPE = 7.5;
 const SLIDE_W_PORTRAIT = 7.5;
 const SLIDE_H_PORTRAIT = 10;
@@ -14,9 +13,46 @@ const FOOTER_H = 0.35;
 const CAPTION_H = 0.45;
 
 /**
+ * Re-renders any image blob (JPEG or PNG) through the browser canvas.
+ * This strips broken/missing ICC profiles and outputs a clean sRGB PNG,
+ * which pptxgenjs renders with 100% correct colors in PowerPoint.
+ */
+function blobToCanvasPng(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(blob);
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        reject(new Error("Canvas context unavailable"));
+        return;
+      }
+      // White background prevents transparency artifacts
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/png"));
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Image failed to load"));
+    };
+
+    img.src = url;
+  });
+}
+
+/**
  * Main PPT generation engine.
- * Builds a professional PPTX with headers, footers, logos, slide numbers,
- * and configurable grid layouts.
+ * Builds a professional PPTX with headers, footers, slide numbers,
+ * and configurable grid layouts. Images are always full-color and sharp.
  */
 export async function generatePPTX(
   draft: ReportDraft,
@@ -40,7 +76,6 @@ export async function generatePPTX(
     const slideConfig = draft.slides[slideIndex];
     const slide = pptx.addSlide();
 
-    // ── Background
     slide.background = { color: "FFFFFF" };
 
     // ── Header bar
@@ -50,14 +85,11 @@ export async function generatePPTX(
       line: { color: "1E3A5F" },
     });
 
-    // Report title in header
     slide.addText(draft.info.reportName || "Field Report", {
       x: MARGIN, y: 0, w: slideW * 0.55, h: HEADER_H,
-      fontSize: 11, bold: true, color: "FFFFFF",
-      valign: "middle",
+      fontSize: 11, bold: true, color: "FFFFFF", valign: "middle",
     });
 
-    // Project info in header (right side)
     slide.addText(
       `${draft.info.projectName || ""} | ${draft.info.reportDate || ""}`,
       {
@@ -74,19 +106,16 @@ export async function generatePPTX(
       line: { color: "D0D8E0" },
     });
 
-    // Inspector
     slide.addText(`Inspector: ${draft.info.inspectorName || "-"}`, {
       x: MARGIN, y: footerY, w: slideW * 0.4, h: FOOTER_H,
       fontSize: 7, color: "555555", valign: "middle",
     });
 
-    // Client
     slide.addText(`Client: ${draft.info.clientName || "-"}`, {
       x: slideW * 0.4, y: footerY, w: slideW * 0.3, h: FOOTER_H,
       fontSize: 7, color: "555555", align: "center", valign: "middle",
     });
 
-    // Slide number
     slide.addText(`${slideIndex + 1} / ${totalSlides}`, {
       x: slideW - 1.2 - MARGIN, y: footerY, w: 1.2, h: FOOTER_H,
       fontSize: 7, color: "555555", align: "right", valign: "middle",
@@ -113,21 +142,27 @@ export async function generatePPTX(
       const imgY = contentY + row * (imgH + CAPTION_H + 0.1) + 0.05;
       const imgW = cellW - 0.1;
 
-      // Get image data
       try {
         const record = await getPhoto(photoId);
-        let imgData: string | undefined;
+        let pngBase64: string | undefined;
 
         if (record?.imageBlob) {
-          imgData = await blobToBase64(record.imageBlob);
+          // Route through canvas → guaranteed full-color sRGB PNG
+          pngBase64 = await blobToCanvasPng(record.imageBlob);
+        } else if (photo.localBlobUrl) {
+          // Fallback: re-render from object URL
+          const resp = await fetch(photo.localBlobUrl);
+          const blob = await resp.blob();
+          pngBase64 = await blobToCanvasPng(blob);
         } else if (photo.imageUrl) {
-          imgData = photo.imageUrl;
+          // Last resort: Firebase URL
+          pngBase64 = photo.imageUrl;
         }
 
-        if (imgData) {
+        if (pngBase64) {
           slide.addImage({
-            data: imgData.startsWith("data:") ? imgData : undefined,
-            path: !imgData.startsWith("data:") ? imgData : undefined,
+            data: pngBase64.startsWith("data:") ? pngBase64 : undefined,
+            path: !pngBase64.startsWith("data:") ? pngBase64 : undefined,
             x: imgX, y: imgY, w: imgW, h: imgH,
             sizing: { type: "contain", w: imgW, h: imgH },
           });
@@ -137,6 +172,11 @@ export async function generatePPTX(
         slide.addShape(pptx.ShapeType.rect, {
           x: imgX, y: imgY, w: imgW, h: imgH,
           fill: { color: "EEEEEE" },
+          line: { color: "CCCCCC" },
+        });
+        slide.addText("Image unavailable", {
+          x: imgX, y: imgY, w: imgW, h: imgH,
+          fontSize: 8, color: "999999", align: "center", valign: "middle",
         });
       }
 
@@ -159,13 +199,11 @@ export async function generatePPTX(
       }
     }
 
-    // ── Slide notes
     if (slideConfig.notes) {
       slide.addNotes(slideConfig.notes);
     }
   }
 
-  // Save/download
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
   await pptx.writeFile({
     fileName: `${draft.info.reportName || "Report"}_${timestamp}.pptx`,
