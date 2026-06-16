@@ -125,11 +125,10 @@ export async function generatePPTX(
         }
 
         if (imgData) {
-          const base64Data = imgData.startsWith("data:") ? imgData.split(",")[1] : undefined;
           slide.addImage({
-            data: base64Data,
+            data: imgData.startsWith("data:") ? imgData : undefined,
             path: !imgData.startsWith("data:") ? imgData : undefined,
-            x: imgX, y: imgY,
+            x: imgX, y: imgY, w: imgW, h: imgH,
             sizing: { type: "contain", w: imgW, h: imgH },
           });
         }
