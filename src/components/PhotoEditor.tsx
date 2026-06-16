@@ -85,6 +85,35 @@ export function PhotoEditor({ photo, onClose }: Props) {
     }
   };
 
+  const handleQuickPPT = async () => {
+    try {
+      toast.loading("Generating PPT...", { id: "quick-ppt" });
+      const { createDraft, buildSlides } = useReportsStore.getState();
+      const draft = await createDraft({
+        reportName: title || "Quick Report",
+        projectName: "",
+        inspectorName: "",
+        clientName: "",
+        reportDate: new Date().toLocaleDateString(),
+      });
+      // Layout 1 is usually 1 photo per slide (or similar)
+      buildSlides([photo.id], 1);
+      
+      setTimeout(async () => {
+        const { generatePPTX } = await import("@/lib/pptExporter");
+        const meta = usePhotosStore.getState().photos.find((p) => p.id === photo.id) || photo;
+        const map = new Map([[photo.id, meta]]);
+        const currentDraft = useReportsStore.getState().activeDraft;
+        if (currentDraft) {
+           await generatePPTX(currentDraft, map);
+           toast.success("PPT Downloaded!", { id: "quick-ppt" });
+        }
+      }, 500);
+    } catch (e) {
+      toast.error("Failed to generate PPT", { id: "quick-ppt" });
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col animate-slide-right">
       {/* ── Header ── */}
@@ -152,9 +181,12 @@ export function PhotoEditor({ photo, onClose }: Props) {
       </div>
 
       {/* ── Actions ── */}
-      <div className="border-t border-border bg-background p-4 safe-bottom grid grid-cols-3 gap-2">
+      <div className="border-t border-border bg-background p-4 safe-bottom grid grid-cols-4 gap-2">
         <button onClick={handleDelete} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-destructive/10 text-destructive font-medium text-xs">
           <Trash2 className="w-5 h-5" /> Delete
+        </button>
+        <button onClick={handleQuickPPT} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-blue-500/10 text-blue-600 font-medium text-xs">
+          <FileText className="w-5 h-5" /> PPTX
         </button>
         <button onClick={handleShare} className="flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl bg-green-500/10 text-green-600 font-medium text-xs">
           <Share2 className="w-5 h-5" /> Share

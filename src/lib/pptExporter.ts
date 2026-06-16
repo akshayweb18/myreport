@@ -166,8 +166,9 @@ export async function generatePPTX(
   }
 
   // Save/download
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
   await pptx.writeFile({
-    fileName: `${draft.info.reportName || "Report"}_${new Date().toISOString().slice(0, 10)}.pptx`,
+    fileName: `${draft.info.reportName || "Report"}_${timestamp}.pptx`,
   });
 }
 
