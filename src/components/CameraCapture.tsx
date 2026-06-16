@@ -48,11 +48,10 @@ export function CameraCapture({ onClose }: Props) {
       // 2. Unblock UI immediately so user can take next photo
       setCapturing(false);
 
-      // 3. Process heavy compression and upload in background
+      // 3. Process in background - store original quality locally, upload compressed for speed
       (async () => {
         try {
           const thumbnail = await createThumbnail(blob);
-          const compressed = await compressImage(blob, 1920, 0.85);
           const location = await getCurrentLocation();
           const id = generateId();
           const now = Date.now();
@@ -66,12 +65,16 @@ export function CameraCapture({ onClose }: Props) {
             createdAt: now,
             syncStatus: "pending",
             order: now,
-            imageBlob: compressed,
+            imageBlob: blob,         // Store original quality for PPT
             thumbnailBlob: thumbnail,
           };
 
+          // Save to IndexedDB & update UI
           await addPhoto(photo);
-          enqueue(id, compressed, `reports/photos/${id}.jpg`);
+
+          // Compress to 1280px JPEG for fast cloud upload (smaller file = faster upload)
+          const uploadBlob = await compressImage(blob, 1280, 0.82);
+          enqueue(id, uploadBlob, `reports/photos/${id}.jpg`);
         } catch (err) {
           console.error("Background processing failed", err);
         }
