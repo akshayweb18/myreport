@@ -25,8 +25,8 @@ function blobToCanvasPng(blob: Blob): Promise<string> {
     img.onload = () => {
       const canvas = document.createElement("canvas");
       
-      // Resize to max 1280px to prevent PowerPoint memory overload (which causes grayscale/broken images)
-      const MAX_SIZE = 1280;
+      // Resize to max 1920px for crystal clear quality while avoiding mobile viewer crashes
+      const MAX_SIZE = 1920;
       let width = img.naturalWidth;
       let height = img.naturalHeight;
       
