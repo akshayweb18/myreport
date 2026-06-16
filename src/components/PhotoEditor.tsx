@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save, Trash2, MapPin, Tag, Copy, Share2 } from "lucide-react";
+import { ArrowLeft, Save, Trash2, MapPin, Tag, Copy, Share2, FileText } from "lucide-react";
 import { usePhotosStore } from "@/stores/photosStore";
 import { useReportsStore } from "@/stores/reportsStore";
 import type { PhotoMetadata } from "@/types";
