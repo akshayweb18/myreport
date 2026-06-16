@@ -48,7 +48,7 @@ export const useReportsStore = create<ReportsState>()((set, get) => ({
       id: uuid(),
       info,
       slides: [],
-      orientation: "landscape",
+      orientation: "portrait",
       format: "pptx",
       createdAt: Date.now(),
       updatedAt: Date.now(),

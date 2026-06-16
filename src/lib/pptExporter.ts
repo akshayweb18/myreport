@@ -6,7 +6,7 @@ import { getPhoto } from "@/lib/db";
 const SLIDE_W_LANDSCAPE = 13.33;
 const SLIDE_H_LANDSCAPE = 7.5;
 const SLIDE_W_PORTRAIT = 7.5;
-const SLIDE_H_PORTRAIT = 10;
+const SLIDE_H_PORTRAIT = 13.33;
 const MARGIN = 0.3;
 const HEADER_H = 0.6;
 const FOOTER_H = 0.35;
@@ -84,7 +84,14 @@ export async function generatePPTX(
   const slideW = isLandscape ? SLIDE_W_LANDSCAPE : SLIDE_W_PORTRAIT;
   const slideH = isLandscape ? SLIDE_H_LANDSCAPE : SLIDE_H_PORTRAIT;
 
-  pptx.layout = isLandscape ? "LAYOUT_WIDE" : "LAYOUT_4x3";
+  if (isLandscape) {
+    pptx.layout = "LAYOUT_WIDE"; // 16:9 Landscape
+  } else {
+    // 9:16 Portrait (Phone aspect ratio)
+    pptx.defineLayout({ name: "PHONE_PORTRAIT", width: slideW, height: slideH });
+    pptx.layout = "PHONE_PORTRAIT";
+  }
+
   pptx.author = draft.info.inspectorName;
   pptx.company = draft.info.projectName;
   pptx.subject = draft.info.reportName;
