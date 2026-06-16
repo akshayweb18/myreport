@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save, Trash2, MapPin, Tag, Copy, Share2 } from "lucide-react";
 import { usePhotosStore } from "@/stores/photosStore";
+import { useReportsStore } from "@/stores/reportsStore";
 import type { PhotoMetadata } from "@/types";
 import { generateId } from "@/lib/imageUtils";
 import { getPhoto } from "@/lib/db";
