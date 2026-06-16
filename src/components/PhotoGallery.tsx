@@ -39,7 +39,7 @@ export function PhotoGallery({ onNavigate, onEditPhoto }: Props) {
   return (
     <div className="flex flex-col h-full bg-background pb-20">
       {/* ── Header & Search ── */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 py-3 safe-top">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 pb-3 safe-top">
         <div className="flex items-center justify-between mb-3">
           <h1 className="text-xl font-bold">Gallery</h1>
           {isSelectionMode ? (

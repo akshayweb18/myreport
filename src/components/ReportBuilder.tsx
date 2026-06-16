@@ -77,7 +77,7 @@ export function ReportBuilder({ onNavigate }: Props) {
   return (
     <div className="flex flex-col h-full bg-background pb-20">
       {/* ── Header ── */}
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 py-3 safe-top">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border px-4 pb-3 safe-top">
         <h1 className="text-xl font-bold">Create Report</h1>
         <div className="flex items-center gap-2 mt-2">
            <div className={`flex-1 h-1 rounded-full ${step >= 1 ? "bg-primary" : "bg-muted"}`} />

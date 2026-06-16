@@ -136,8 +136,8 @@
     @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
   }
   .tap-highlight { -webkit-tap-highlight-color: transparent; }
-  .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
-  .safe-top { padding-top: env(safe-area-inset-top, 0px); }
+  .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px); }
+  .safe-top { padding-top: max(env(safe-area-inset-top, 0px), 20px); }
 }
 
 /* ── Animations ──────────────────────────────────────── */
