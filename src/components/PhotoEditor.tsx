@@ -14,8 +14,11 @@ interface Props {
   onClose: () => void;
 }
 
-export function PhotoEditor({ photo, onClose }: Props) {
+export function PhotoEditor({ photo: initialPhoto, onClose }: Props) {
   const { updatePhotoMeta, updatePhotoBlobs, removePhoto, addPhoto } = usePhotosStore();
+  const storePhoto = usePhotosStore(state => state.photos.find(p => p.id === initialPhoto.id));
+  const photo = storePhoto || initialPhoto;
+  
   const { enqueue } = useUploadStore();
   const [title, setTitle] = useState(photo.title);
   const [comment, setComment] = useState(photo.comment);
