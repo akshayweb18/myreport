@@ -205,7 +205,7 @@ export async function generatePPTX(
         slide.addText(photo.title, {
           x: imgX, y: imgY + imgH + 0.02, w: imgW, h: 0.25,
           fontSize: 10, bold: true, color: "1E3A5F",
-          align: "center", valign: "top",
+          align: "left", valign: "top",
         });
       }
 
@@ -214,7 +214,7 @@ export async function generatePPTX(
         slide.addText(photo.comment, {
           x: imgX, y: imgY + imgH + 0.25, w: imgW, h: 0.35,
           fontSize: 9, color: "555555",
-          align: "center", valign: "top",
+          align: "left", valign: "top",
         });
       }
     }
