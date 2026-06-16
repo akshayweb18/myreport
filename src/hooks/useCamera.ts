@@ -20,9 +20,9 @@ export function useCamera() {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
-      if (isMounted.current) setIsActive(true);
+      setIsActive(true);
     } catch (err: unknown) {
-      if (isMounted.current) setError(err instanceof Error ? err.message : "Camera not accessible");
+      setError(err instanceof Error ? err.message : "Camera not accessible");
     }
   }, [facingMode]);
 
