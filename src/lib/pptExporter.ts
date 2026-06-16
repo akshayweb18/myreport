@@ -10,7 +10,7 @@ const SLIDE_H_PORTRAIT = 10;
 const MARGIN = 0.3;
 const HEADER_H = 0.6;
 const FOOTER_H = 0.35;
-const CAPTION_H = 0.45;
+const CAPTION_H = 0.6;
 
 /**
  * Re-renders any image blob (JPEG or PNG) through the browser canvas.
@@ -184,7 +184,7 @@ export async function generatePPTX(
             data: pngBase64.startsWith("data:") ? pngBase64 : undefined,
             path: !pngBase64.startsWith("data:") ? pngBase64 : undefined,
             x: imgX, y: imgY, w: imgW, h: imgH,
-            sizing: { type: "contain", w: imgW, h: imgH },
+            sizing: { type: "cover", w: imgW, h: imgH },
           });
         }
       } catch {
@@ -203,8 +203,8 @@ export async function generatePPTX(
       // Title caption
       if (photo.title) {
         slide.addText(photo.title, {
-          x: imgX, y: imgY + imgH + 0.02, w: imgW, h: 0.22,
-          fontSize: 7, bold: true, color: "1E3A5F",
+          x: imgX, y: imgY + imgH + 0.02, w: imgW, h: 0.25,
+          fontSize: 10, bold: true, color: "1E3A5F",
           align: "center", valign: "top",
         });
       }
@@ -212,8 +212,8 @@ export async function generatePPTX(
       // Comment caption
       if (photo.comment) {
         slide.addText(photo.comment, {
-          x: imgX, y: imgY + imgH + 0.22, w: imgW, h: 0.2,
-          fontSize: 6, color: "555555",
+          x: imgX, y: imgY + imgH + 0.25, w: imgW, h: 0.35,
+          fontSize: 9, color: "555555",
           align: "center", valign: "top",
         });
       }
