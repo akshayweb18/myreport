@@ -56,8 +56,8 @@ function blobToCanvasPng(blob: Blob): Promise<string> {
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
       
-      // Export as high-quality JPEG (much smaller file size than PNG, perfect for PPT)
-      resolve(canvas.toDataURL("image/jpeg", 0.9));
+      // Export as PNG (CRITICAL: PowerPoint incorrectly renders canvas JPEGs as grayscale/inverted due to missing ICC profiles. PNG guarantees 100% color accuracy in PPTX files).
+      resolve(canvas.toDataURL("image/png"));
     };
 
     img.onerror = () => {
