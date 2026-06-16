@@ -32,7 +32,8 @@ export function CameraCapture({ onClose }: Props) {
       if (!blob) return;
 
       const thumbnail = await createThumbnail(blob);
-      const compressed = blob; // Use original uncompressed blob
+      // Compress the raw 4K PNG to a high-quality 1920px JPEG to ensure lightning-fast uploads
+      const compressed = await compressImage(blob, 1920, 0.85);
 
       const location = await getCurrentLocation();
       const id = generateId();
