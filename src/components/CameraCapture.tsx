@@ -31,10 +31,8 @@ export function CameraCapture({ onClose }: Props) {
       const blob = await capture();
       if (!blob) return;
 
-      const [compressed, thumbnail] = await Promise.all([
-        compressImage(blob, 1920, 0.88),
-        createThumbnail(blob),
-      ]);
+      const thumbnail = await createThumbnail(blob);
+      const compressed = blob; // Use original uncompressed blob
 
       const location = await getCurrentLocation();
       const id = generateId();
