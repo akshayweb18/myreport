@@ -40,7 +40,7 @@ export function useCamera() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       canvas.getContext("2d")?.drawImage(video, 0, 0);
-      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.92);
+      canvas.toBlob((blob) => resolve(blob), "image/png");
     });
   }, []);
 
