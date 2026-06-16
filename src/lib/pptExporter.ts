@@ -129,7 +129,7 @@ export async function generatePPTX(
             data: imgData.startsWith("data:") ? imgData : undefined,
             path: !imgData.startsWith("data:") ? imgData : undefined,
             x: imgX, y: imgY, w: imgW, h: imgH,
-            sizing: { type: "cover", w: imgW, h: imgH },
+            sizing: { type: "contain", w: imgW, h: imgH },
           });
         }
       } catch {
