@@ -9,7 +9,6 @@ const SLIDE_W_PORTRAIT = 7.5;
 const SLIDE_H_PORTRAIT = 10;
 const MARGIN = 0.3;
 const HEADER_H = 0.6;
-const FOOTER_H = 0.35;
 const CAPTION_H = 0.6;
 
 /** Pixel dimensions returned alongside the PNG data URL. */
@@ -143,8 +142,6 @@ export async function generatePPTX(
   pptx.subject = draft.info.reportName || "";
   pptx.title = draft.info.reportName || "";
 
-  const totalSlides = draft.slides.length;
-
   for (let slideIndex = 0; slideIndex < draft.slides.length; slideIndex++) {
     const slideConfig = draft.slides[slideIndex];
     const slide = pptx.addSlide();
@@ -167,32 +164,9 @@ export async function generatePPTX(
     );
 
 
-    // ── Footer bar
-    const footerY = slideH - FOOTER_H;
-    slide.addShape(pptx.ShapeType.rect, {
-      x: 0, y: footerY, w: slideW, h: FOOTER_H,
-      fill: { color: "F0F4F8" },
-      line: { color: "D0D8E0" },
-    });
-
-    slide.addText(`Inspector: ${draft.info.inspectorName || "-"}`, {
-      x: MARGIN, y: footerY, w: slideW * 0.4, h: FOOTER_H,
-      fontSize: 7, color: "555555", valign: "middle",
-    });
-
-    slide.addText(`Client: ${draft.info.clientName || "-"}`, {
-      x: slideW * 0.4, y: footerY, w: slideW * 0.3, h: FOOTER_H,
-      fontSize: 7, color: "555555", align: "center", valign: "middle",
-    });
-
-    slide.addText(`${slideIndex + 1} / ${totalSlides}`, {
-      x: slideW - 1.2 - MARGIN, y: footerY, w: 1.2, h: FOOTER_H,
-      fontSize: 7, color: "555555", align: "right", valign: "middle",
-    });
-
     // ── Photo grid
     const contentY = HEADER_H + 0.15;
-    const contentH = footerY - contentY - 0.1;
+    const contentH = slideH - contentY - 0.15;
     const contentW = slideW - MARGIN * 2;
 
     const { rows, cols } = getGridDimensions(slideConfig);
