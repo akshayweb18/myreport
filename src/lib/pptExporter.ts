@@ -12,24 +12,33 @@ const HEADER_H = 0.6;
 const FOOTER_H = 0.35;
 const CAPTION_H = 0.6;
 
+/** Pixel dimensions returned alongside the PNG data URL. */
+interface CanvasPngResult {
+  dataUrl: string;
+  naturalWidth: number;
+  naturalHeight: number;
+}
+
 /**
  * Re-renders any image blob (JPEG or PNG) through the browser canvas.
  * This strips broken/missing ICC profiles and outputs a clean sRGB PNG,
  * which pptxgenjs renders with 100% correct colors in PowerPoint.
+ * Also returns the image's natural pixel dimensions so the caller can
+ * calculate the correct aspect-ratio-preserving placement on the slide.
  */
-function blobToCanvasPng(blob: Blob): Promise<string> {
+function blobToCanvasPng(blob: Blob): Promise<CanvasPngResult> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(blob);
 
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      
+
       // Resize to max 1920px for crystal clear quality while avoiding mobile viewer crashes
       const MAX_SIZE = 1920;
       let width = img.naturalWidth;
       let height = img.naturalHeight;
-      
+
       if (width > MAX_SIZE || height > MAX_SIZE) {
         if (width > height) {
           height = Math.round((height * MAX_SIZE) / width);
@@ -42,25 +51,31 @@ function blobToCanvasPng(blob: Blob): Promise<string> {
 
       canvas.width = width;
       canvas.height = height;
-      
+
       const ctx = canvas.getContext("2d");
       if (!ctx) {
         URL.revokeObjectURL(url);
         reject(new Error("Canvas context unavailable"));
         return;
       }
-      
+
       // Draw on white background (ensures transparent PNGs or odd formats look correct)
       ctx.fillStyle = "#FFFFFF";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Explicitly draw the image matching the canvas dimensions to preserve exactly whether it's vertical or horizontal
+
+      // Explicitly draw the image matching the canvas dimensions to preserve
+      // exactly whether it's vertical or horizontal
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
-      
-      // Export as PNG (CRITICAL: PowerPoint incorrectly renders canvas JPEGs as grayscale/inverted due to missing ICC profiles. PNG guarantees 100% color accuracy in PPTX files).
-      // This also fully locks in the vertical or horizontal orientation of the image.
-      resolve(canvas.toDataURL("image/png"));
+
+      // Export as PNG (CRITICAL: PowerPoint incorrectly renders canvas JPEGs as
+      // grayscale/inverted due to missing ICC profiles. PNG guarantees 100% color
+      // accuracy in PPTX files). This also fully locks in the orientation.
+      resolve({
+        dataUrl: canvas.toDataURL("image/png"),
+        naturalWidth: canvas.width,
+        naturalHeight: canvas.height,
+      });
     };
 
     img.onerror = () => {
@@ -70,6 +85,40 @@ function blobToCanvasPng(blob: Blob): Promise<string> {
 
     img.src = url;
   });
+}
+
+/**
+ * Given a cell area (cellW × cellH in inches) and the image's pixel dimensions,
+ * returns the actual width, height, x-offset, and y-offset to center the image
+ * inside the cell while preserving its aspect ratio ("contain" behaviour).
+ */
+function containFit(
+  cellW: number,
+  cellH: number,
+  imgNaturalW: number,
+  imgNaturalH: number
+): { w: number; h: number; dx: number; dy: number } {
+  const imgAspect = imgNaturalW / imgNaturalH;
+  const cellAspect = cellW / cellH;
+
+  let w: number;
+  let h: number;
+
+  if (imgAspect >= cellAspect) {
+    // Image is wider than the cell → constrain by width
+    w = cellW;
+    h = cellW / imgAspect;
+  } else {
+    // Image is taller than the cell → constrain by height
+    h = cellH;
+    w = cellH * imgAspect;
+  }
+
+  // Centre the image within the cell
+  const dx = (cellW - w) / 2;
+  const dy = (cellH - h) / 2;
+
+  return { w, h, dx, dy };
 }
 
 /**
@@ -168,25 +217,44 @@ export async function generatePPTX(
 
       try {
         const record = await getPhoto(photoId);
-        let pngBase64: string | undefined;
+        let pngResult: CanvasPngResult | undefined;
+        let fallbackUrl: string | undefined;
 
         if (record?.imageBlob) {
-          // Route through canvas → guaranteed full-color sRGB PNG
-          pngBase64 = await blobToCanvasPng(record.imageBlob);
+          // Route through canvas → guaranteed full-color sRGB PNG + real dimensions
+          pngResult = await blobToCanvasPng(record.imageBlob);
         } else if (photo.localBlobUrl) {
           // Fallback: re-render from object URL
           const resp = await fetch(photo.localBlobUrl);
           const blob = await resp.blob();
-          pngBase64 = await blobToCanvasPng(blob);
+          pngResult = await blobToCanvasPng(blob);
         } else if (photo.imageUrl) {
-          // Last resort: Firebase URL
-          pngBase64 = photo.imageUrl;
+          // Last resort: Firebase URL (no canvas, no dimension info)
+          fallbackUrl = photo.imageUrl;
         }
 
-        if (pngBase64) {
+        if (pngResult) {
+          // ── Aspect-ratio-preserving "contain" placement ──────────────────
+          // Use the real pixel dimensions from the canvas to compute how the
+          // image should be scaled to fill the cell without any distortion.
+          const { w: fitW, h: fitH, dx, dy } = containFit(
+            imgW,
+            imgH,
+            pngResult.naturalWidth,
+            pngResult.naturalHeight
+          );
+
           slide.addImage({
-            data: pngBase64.startsWith("data:") ? pngBase64 : undefined,
-            path: !pngBase64.startsWith("data:") ? pngBase64 : undefined,
+            data: pngResult.dataUrl,
+            x: imgX + dx,
+            y: imgY + dy,
+            w: fitW,
+            h: fitH,
+          });
+        } else if (fallbackUrl) {
+          // No dimension info available – let pptxgenjs do its best with contain
+          slide.addImage({
+            path: fallbackUrl,
             x: imgX, y: imgY, w: imgW, h: imgH,
             sizing: { type: "contain", w: imgW, h: imgH },
           });
