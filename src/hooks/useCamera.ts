@@ -38,8 +38,9 @@ export function useCamera() {
       const video = videoRef.current;
       if (!video) return resolve(null);
 
-      // Capture the FULL native video frame — preserves landscape when phone is
-      // rotated sideways and portrait when held upright. No cropping to screen shape.
+      // Capture the FULL native video frame so the saved image orientation
+      // matches exactly what the camera sensor captured:
+      // landscape capture → landscape image, portrait capture → portrait image.
       const w = video.videoWidth;
       const h = video.videoHeight;
 
