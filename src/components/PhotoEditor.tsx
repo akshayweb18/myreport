@@ -98,7 +98,7 @@ export function PhotoEditor({ photo: initialPhoto, onClose }: Props) {
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({
             title: photo.title,
-            text: photo.comment || "Shared from MyReport",
+            ...(photo.comment ? { text: photo.comment } : {}),
             files: [file],
           });
         } else {
