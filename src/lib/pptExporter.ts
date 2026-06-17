@@ -50,13 +50,16 @@ function blobToCanvasPng(blob: Blob): Promise<string> {
         return;
       }
       
-      // Draw on white background
+      // Draw on white background (ensures transparent PNGs or odd formats look correct)
       ctx.fillStyle = "#FFFFFF";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Explicitly draw the image matching the canvas dimensions to preserve exactly whether it's vertical or horizontal
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
       
       // Export as PNG (CRITICAL: PowerPoint incorrectly renders canvas JPEGs as grayscale/inverted due to missing ICC profiles. PNG guarantees 100% color accuracy in PPTX files).
+      // This also fully locks in the vertical or horizontal orientation of the image.
       resolve(canvas.toDataURL("image/png"));
     };
 
