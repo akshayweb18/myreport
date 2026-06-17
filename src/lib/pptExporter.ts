@@ -158,18 +158,14 @@ export async function generatePPTX(
       line: { color: "1E3A5F" },
     });
 
-    slide.addText(draft.info.reportName || "Field Report", {
-      x: MARGIN, y: 0, w: slideW * 0.55, h: HEADER_H,
-      fontSize: 11, bold: true, color: "FFFFFF", valign: "middle",
-    });
-
     slide.addText(
       `${draft.info.projectName || ""} | ${draft.info.reportDate || ""}`,
       {
-        x: slideW * 0.55, y: 0, w: slideW * 0.45 - MARGIN, h: HEADER_H,
-        fontSize: 8, color: "CCDDEE", align: "right", valign: "middle",
+        x: MARGIN, y: 0, w: slideW - MARGIN * 2, h: HEADER_H,
+        fontSize: 9, bold: true, color: "FFFFFF", align: "right", valign: "middle",
       }
     );
+
 
     // ── Footer bar
     const footerY = slideH - FOOTER_H;
@@ -251,6 +247,25 @@ export async function generatePPTX(
             w: fitW,
             h: fitH,
           });
+
+          // Captions aligned to the actual image left edge
+          const captionX = imgX + dx;
+          const captionW = fitW;
+
+          if (photo.title) {
+            slide.addText(photo.title, {
+              x: captionX, y: imgY + imgH + 0.02, w: captionW, h: 0.25,
+              fontSize: 10, bold: true, color: "1E3A5F",
+              align: "left", valign: "top",
+            });
+          }
+          if (photo.comment) {
+            slide.addText(photo.comment, {
+              x: captionX, y: imgY + imgH + 0.25, w: captionW, h: 0.35,
+              fontSize: 9, color: "555555",
+              align: "left", valign: "top",
+            });
+          }
         } else if (fallbackUrl) {
           // No dimension info available – let pptxgenjs do its best with contain
           slide.addImage({
@@ -258,6 +273,22 @@ export async function generatePPTX(
             x: imgX, y: imgY, w: imgW, h: imgH,
             sizing: { type: "contain", w: imgW, h: imgH },
           });
+
+          // Captions at cell left (no dx info available)
+          if (photo.title) {
+            slide.addText(photo.title, {
+              x: imgX, y: imgY + imgH + 0.02, w: imgW, h: 0.25,
+              fontSize: 10, bold: true, color: "1E3A5F",
+              align: "left", valign: "top",
+            });
+          }
+          if (photo.comment) {
+            slide.addText(photo.comment, {
+              x: imgX, y: imgY + imgH + 0.25, w: imgW, h: 0.35,
+              fontSize: 9, color: "555555",
+              align: "left", valign: "top",
+            });
+          }
         }
       } catch {
         // Show placeholder on error
@@ -269,24 +300,6 @@ export async function generatePPTX(
         slide.addText("Image unavailable", {
           x: imgX, y: imgY, w: imgW, h: imgH,
           fontSize: 8, color: "999999", align: "center", valign: "middle",
-        });
-      }
-
-      // Title caption
-      if (photo.title) {
-        slide.addText(photo.title, {
-          x: imgX, y: imgY + imgH + 0.02, w: imgW, h: 0.25,
-          fontSize: 10, bold: true, color: "1E3A5F",
-          align: "left", valign: "top",
-        });
-      }
-
-      // Comment caption
-      if (photo.comment) {
-        slide.addText(photo.comment, {
-          x: imgX, y: imgY + imgH + 0.25, w: imgW, h: 0.35,
-          fontSize: 9, color: "555555",
-          align: "left", valign: "top",
         });
       }
     }
