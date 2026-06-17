@@ -11,8 +11,9 @@ export function useCamera() {
   const start = useCallback(async () => {
     setError(null);
     try {
+      // Removed height constraint to allow device to dictate aspect ratio natively
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode, width: { ideal: 4096 }, height: { ideal: 2160 } },
+        video: { facingMode, width: { ideal: 4096 } },
         audio: false,
       });
       streamRef.current = stream;
@@ -37,38 +38,47 @@ export function useCamera() {
       const video = videoRef.current;
       if (!video) return resolve(null);
 
+      // Get native video dimensions
       const sourceW = video.videoWidth;
       const sourceH = video.videoHeight;
-      const displayW = video.clientWidth;
-      const displayH = video.clientHeight;
+      
+      // Get the actual displayed dimensions on screen
+      const displayW = video.clientWidth || window.innerWidth;
+      const displayH = video.clientHeight || window.innerHeight;
 
+      // Calculate aspect ratios
       const sourceAspect = sourceW / sourceH;
       const displayAspect = displayW / displayH;
 
       let drawW = sourceW;
       let drawH = sourceH;
-      let offsetX = 0;
-      let offsetY = 0;
+      let sx = 0;
+      let sy = 0;
 
+      // We want to crop the original video to match the display aspect ratio
+      // This matches exactly what "object-cover" does in CSS
       if (sourceAspect > displayAspect) {
-        // Source is wider than display: crop sides
+        // Video is wider than display: crop sides
         drawW = sourceH * displayAspect;
-        offsetX = (sourceW - drawW) / 2;
+        sx = (sourceW - drawW) / 2;
       } else {
-        // Source is taller than display: crop top/bottom
+        // Video is taller than display: crop top/bottom
         drawH = sourceW / displayAspect;
-        offsetY = (sourceH - drawH) / 2;
+        sy = (sourceH - drawH) / 2;
       }
 
       const canvas = document.createElement("canvas");
       canvas.width = drawW;
       canvas.height = drawH;
       
-      canvas.getContext("2d")?.drawImage(
-        video, 
-        offsetX, offsetY, drawW, drawH,
-        0, 0, drawW, drawH
-      );
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        ctx.drawImage(
+          video,
+          sx, sy, drawW, drawH, // Source rectangle
+          0, 0, drawW, drawH    // Destination rectangle
+        );
+      }
       
       // JPEG encoding is ~10x faster than PNG, making the camera shutter strictly instantaneous
       canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.95);
