@@ -101,11 +101,16 @@ export function PhotoGallery({ onNavigate, onEditPhoto }: Props) {
             onClick={() => handlePhotoClick(photo)}
             className={`photo-card group ${selectedIds.has(photo.id) ? "selected" : ""}`}
           >
-            <div className="aspect-square bg-muted relative">
+            <div className="bg-muted relative flex items-center justify-center min-h-[80px]">
               {photo.localBlobUrl ? (
-                <img src={photo.localBlobUrl} alt={photo.title} className="w-full h-full object-cover" />
+                <img
+                  src={photo.localBlobUrl}
+                  alt={photo.title}
+                  className="w-full h-auto block"
+                  style={{ objectFit: "contain" }}
+                />
               ) : (
-                <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-8 h-8 text-muted-foreground/30" /></div>
+                <div className="w-full aspect-square flex items-center justify-center"><ImageIcon className="w-8 h-8 text-muted-foreground/30" /></div>
               )}
               
               {/* Sync Status Indicator */}

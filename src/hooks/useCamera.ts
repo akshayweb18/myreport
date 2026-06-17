@@ -38,48 +38,20 @@ export function useCamera() {
       const video = videoRef.current;
       if (!video) return resolve(null);
 
-      // Get native video dimensions
-      const sourceW = video.videoWidth;
-      const sourceH = video.videoHeight;
-      
-      // Get the actual displayed dimensions on screen
-      const displayW = video.clientWidth || window.innerWidth;
-      const displayH = video.clientHeight || window.innerHeight;
-
-      // Calculate aspect ratios
-      const sourceAspect = sourceW / sourceH;
-      const displayAspect = displayW / displayH;
-
-      let drawW = sourceW;
-      let drawH = sourceH;
-      let sx = 0;
-      let sy = 0;
-
-      // We want to crop the original video to match the display aspect ratio
-      // This matches exactly what "object-cover" does in CSS
-      if (sourceAspect > displayAspect) {
-        // Video is wider than display: crop sides
-        drawW = sourceH * displayAspect;
-        sx = (sourceW - drawW) / 2;
-      } else {
-        // Video is taller than display: crop top/bottom
-        drawH = sourceW / displayAspect;
-        sy = (sourceH - drawH) / 2;
-      }
+      // Capture the FULL native video frame — preserves landscape when phone is
+      // rotated sideways and portrait when held upright. No cropping to screen shape.
+      const w = video.videoWidth;
+      const h = video.videoHeight;
 
       const canvas = document.createElement("canvas");
-      canvas.width = drawW;
-      canvas.height = drawH;
-      
+      canvas.width = w;
+      canvas.height = h;
+
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        ctx.drawImage(
-          video,
-          sx, sy, drawW, drawH, // Source rectangle
-          0, 0, drawW, drawH    // Destination rectangle
-        );
+        ctx.drawImage(video, 0, 0, w, h);
       }
-      
+
       // JPEG encoding is ~10x faster than PNG, making the camera shutter strictly instantaneous
       canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.95);
     });
