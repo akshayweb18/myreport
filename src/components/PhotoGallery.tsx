@@ -94,22 +94,23 @@ export function PhotoGallery({ onNavigate, onEditPhoto }: Props) {
       )}
 
       {/* ── Grid ── */}
-      <div className="p-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 flex-1 overflow-y-auto">
+      <div className="p-2 grid grid-cols-1 gap-3 flex-1 overflow-y-auto">
         {filteredPhotos.map((photo) => (
           <div
             key={photo.id}
             onClick={() => handlePhotoClick(photo)}
             className={`photo-card group ${selectedIds.has(photo.id) ? "selected" : ""}`}
           >
-            <div className="aspect-square bg-muted relative overflow-hidden">
+            {/* Image — natural aspect ratio: landscape=wide card, portrait=tall card */}
+            <div className="bg-muted relative overflow-hidden rounded-t-xl">
               {photo.localBlobUrl ? (
                 <img
                   src={photo.localBlobUrl}
                   alt={photo.title}
-                  className="w-full h-full object-contain"
+                  className="w-full h-auto block"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-8 h-8 text-muted-foreground/30" /></div>
+                <div className="w-full aspect-video flex items-center justify-center"><ImageIcon className="w-8 h-8 text-muted-foreground/30" /></div>
               )}
               
               {/* Sync Status Indicator */}
