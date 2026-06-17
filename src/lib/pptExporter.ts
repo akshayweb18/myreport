@@ -222,20 +222,21 @@ export async function generatePPTX(
             h: fitH,
           });
 
-          // Captions aligned to the actual image left edge
+          // Captions start immediately below the actual image bottom (not the cell bottom)
           const captionX = imgX + dx;
           const captionW = fitW;
+          const captionBaseY = imgY + dy + fitH + 0.05;
 
           if (photo.title) {
             slide.addText(photo.title, {
-              x: captionX, y: imgY + imgH + 0.02, w: captionW, h: 0.25,
+              x: captionX, y: captionBaseY, w: captionW, h: 0.25,
               fontSize: 10, bold: true, color: "1E3A5F",
               align: "left", valign: "top",
             });
           }
           if (photo.comment) {
             slide.addText(photo.comment, {
-              x: captionX, y: imgY + imgH + 0.25, w: captionW, h: 0.35,
+              x: captionX, y: captionBaseY + 0.25, w: captionW, h: 0.35,
               fontSize: 9, color: "555555",
               align: "left", valign: "top",
             });
@@ -248,17 +249,17 @@ export async function generatePPTX(
             sizing: { type: "contain", w: imgW, h: imgH },
           });
 
-          // Captions at cell left (no dx info available)
+          // Captions immediately below fallback image
           if (photo.title) {
             slide.addText(photo.title, {
-              x: imgX, y: imgY + imgH + 0.02, w: imgW, h: 0.25,
+              x: imgX, y: imgY + imgH + 0.05, w: imgW, h: 0.25,
               fontSize: 10, bold: true, color: "1E3A5F",
               align: "left", valign: "top",
             });
           }
           if (photo.comment) {
             slide.addText(photo.comment, {
-              x: imgX, y: imgY + imgH + 0.25, w: imgW, h: 0.35,
+              x: imgX, y: imgY + imgH + 0.3, w: imgW, h: 0.35,
               fontSize: 9, color: "555555",
               align: "left", valign: "top",
             });
