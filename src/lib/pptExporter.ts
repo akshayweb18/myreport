@@ -237,7 +237,7 @@ export async function generatePPTX(
           if (photo.comment) {
             slide.addText(photo.comment, {
               x: captionX, y: captionBaseY + 0.25, w: captionW, h: 0.35,
-              fontSize: 9, color: "555555",
+              fontSize: 9, color: "000000",
               align: "left", valign: "top",
             });
           }
@@ -260,7 +260,7 @@ export async function generatePPTX(
           if (photo.comment) {
             slide.addText(photo.comment, {
               x: imgX, y: imgY + imgH + 0.3, w: imgW, h: 0.35,
-              fontSize: 9, color: "555555",
+              fontSize: 9, color: "000000",
               align: "left", valign: "top",
             });
           }
