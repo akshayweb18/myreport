@@ -101,13 +101,13 @@ export function PhotoGallery({ onNavigate, onEditPhoto }: Props) {
             onClick={() => handlePhotoClick(photo)}
             className={`photo-card group ${selectedIds.has(photo.id) ? "selected" : ""}`}
           >
-            {/* Landscape card — image shown to fill the horizontal view */}
-            <div className="aspect-[4/3] bg-muted relative overflow-hidden">
+            {/* Square card — image shown at natural orientation via object-contain */}
+            <div className="aspect-square bg-muted relative overflow-hidden">
               {photo.localBlobUrl ? (
                 <img
                   src={photo.localBlobUrl}
                   alt={photo.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-8 h-8 text-muted-foreground/30" /></div>
