@@ -6,7 +6,7 @@
 export type SyncStatus = "pending" | "uploading" | "synced" | "error";
 
 /** Available slide layout configurations */
-export type LayoutType = 1 | 2 | 3 | 4 | 6 | 9 | 12 | "custom";
+export type LayoutType = 1 | 2 | 3 | 4 | 5 | 6 | 8 | 12 | "custom";
 
 /** Report orientation */
 export type Orientation = "landscape" | "portrait";
@@ -89,11 +89,12 @@ export interface LayoutConfig {
 export const LAYOUT_CONFIGS: LayoutConfig[] = [
   { type: 1, label: "1 Photo", rows: 1, cols: 1, maxPhotos: 1 },
   { type: 2, label: "2 Photos", rows: 1, cols: 2, maxPhotos: 2 },
-  { type: 3, label: "3 Photos", rows: 2, cols: 2, maxPhotos: 3 },
+  { type: 3, label: "3 Photos", rows: 1, cols: 3, maxPhotos: 3 },
   { type: 4, label: "4 Photos", rows: 2, cols: 2, maxPhotos: 4 },
+  { type: 5, label: "5 Photos", rows: 2, cols: 3, maxPhotos: 5 },
   { type: 6, label: "6 Photos", rows: 2, cols: 3, maxPhotos: 6 },
-  { type: 9, label: "9 Photos", rows: 3, cols: 3, maxPhotos: 9 },
-  { type: 12, label: "12 Photos", rows: 3, cols: 4, maxPhotos: 12 },
+  { type: 8, label: "8 Photos", rows: 4, cols: 2, maxPhotos: 8 },
+  { type: 12, label: "12 Photos", rows: 4, cols: 3, maxPhotos: 12 },
 ];
 
 // ============================================================

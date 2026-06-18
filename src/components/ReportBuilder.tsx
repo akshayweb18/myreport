@@ -119,10 +119,59 @@ export function ReportBuilder({ onNavigate }: Props) {
                  <button
                    key={conf.type}
                    onClick={() => setLayout(conf.type)}
-                   className={`p-4 rounded-xl border text-left transition-all ${layout === conf.type ? "border-primary bg-primary/5 ring-1 ring-primary" : "bg-card border-border hover:border-primary/40"}`}
+                   className={`p-3 rounded-xl border text-left transition-all flex flex-col gap-2 ${layout === conf.type ? "border-primary bg-primary/5 ring-1 ring-primary" : "bg-card border-border hover:border-primary/40"}`}
                  >
-                   <div className="font-semibold text-sm mb-1">{conf.label}</div>
-                   <div className="text-xs text-muted-foreground">{conf.rows}x{conf.cols} Grid</div>
+                   <div>
+                     <div className="font-semibold text-sm">{conf.label}</div>
+                     <div className="text-[10px] text-muted-foreground mt-0.5">{conf.rows}x{conf.cols} Grid</div>
+                   </div>
+                   
+                   <div className="w-full aspect-[16/9] bg-muted/30 border border-border/50 p-1.5 rounded-md flex gap-1">
+                     {conf.type === 1 && <div className="w-full h-full bg-slate-300 dark:bg-slate-700 rounded-sm" />}
+                     {conf.type === 2 && (
+                       <>
+                         <div className="flex-1 bg-slate-300 dark:bg-slate-700 rounded-sm" />
+                         <div className="flex-1 bg-slate-300 dark:bg-slate-700 rounded-sm" />
+                       </>
+                     )}
+                     {conf.type === 3 && (
+                       <>
+                         <div className="flex-1 bg-slate-300 dark:bg-slate-700 rounded-sm" />
+                         <div className="flex-1 bg-slate-300 dark:bg-slate-700 rounded-sm" />
+                         <div className="flex-1 bg-slate-300 dark:bg-slate-700 rounded-sm" />
+                       </>
+                     )}
+                     {conf.type === 4 && (
+                       <div className="w-full h-full grid grid-cols-2 grid-rows-2 gap-1">
+                         {[1, 2, 3, 4].map(i => <div key={i} className="bg-slate-300 dark:bg-slate-700 rounded-sm" />)}
+                       </div>
+                     )}
+                     {conf.type === 5 && (
+                       <div className="w-full h-full flex flex-col gap-1">
+                         <div className="flex-1 flex gap-1">
+                           {[1, 2, 3].map(i => <div key={i} className="flex-1 bg-slate-300 dark:bg-slate-700 rounded-sm" />)}
+                         </div>
+                         <div className="flex-1 flex gap-1">
+                           {[1, 2].map(i => <div key={i} className="flex-1 bg-slate-300 dark:bg-slate-700 rounded-sm" />)}
+                         </div>
+                       </div>
+                     )}
+                     {conf.type === 6 && (
+                       <div className="w-full h-full grid grid-cols-3 grid-rows-2 gap-1">
+                         {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="bg-slate-300 dark:bg-slate-700 rounded-sm" />)}
+                       </div>
+                     )}
+                     {conf.type === 8 && (
+                       <div className="w-full h-full grid grid-cols-2 grid-rows-4 gap-1">
+                         {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className="bg-slate-300 dark:bg-slate-700 rounded-sm" />)}
+                       </div>
+                     )}
+                     {conf.type === 12 && (
+                       <div className="w-full h-full grid grid-cols-3 grid-rows-4 gap-1">
+                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => <div key={i} className="bg-slate-300 dark:bg-slate-700 rounded-sm" />)}
+                       </div>
+                     )}
+                   </div>
                  </button>
                ))}
              </div>
