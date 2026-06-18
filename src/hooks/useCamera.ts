@@ -48,8 +48,8 @@ export function useCamera() {
         (typeof screen !== "undefined" && screen.orientation?.angle != null)
           ? screen.orientation.angle
           : (typeof window !== "undefined"
-              ? ((window as unknown as { orientation?: number }).orientation ?? 0)
-              : 0);
+            ? ((window as unknown as { orientation?: number }).orientation ?? 0)
+            : 0);
 
       // Mobile rear camera sensors are landscape (vw > vh).
       // The video element is CSS-rotated by the browser to look correct on screen,
