@@ -8,6 +8,7 @@ import { PhotoEditor } from "@/components/PhotoEditor";
 import { ReportBuilder } from "@/components/ReportBuilder";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { useUploadStore } from "@/stores/uploadStore";
+import { usePhotosStore } from "@/stores/photosStore";
 import type { AppView, PhotoMetadata } from "@/types";
 import { Loader2 } from "lucide-react";
 
@@ -46,7 +47,14 @@ export default function App() {
 
       {/* ── Overlays ── */}
       {currentView === "camera" && (
-        <CameraCapture onClose={() => setCurrentView("gallery")} />
+        <CameraCapture onClose={(lastPhotoId) => {
+          setCurrentView("gallery");
+          if (lastPhotoId) {
+            const store = usePhotosStore.getState();
+            const photo = store.photos.find(p => p.id === lastPhotoId);
+            if (photo) setEditingPhoto(photo);
+          }
+        }} />
       )}
       
       {editingPhoto && (

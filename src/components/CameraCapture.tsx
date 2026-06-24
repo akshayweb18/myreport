@@ -8,7 +8,7 @@ import { compressImage, fastThumbnail, generateId, getCurrentLocation } from "@/
 import type { PhotoRecord } from "@/types";
 import { toast } from "sonner";
 
-interface Props { onClose: () => void; }
+interface Props { onClose: (lastPhotoId?: string | null) => void; }
 
 export function CameraCapture({ onClose }: Props) {
   const { videoRef, isActive, error, start, stop, capture, flipCamera, facingMode } = useCamera();
@@ -17,6 +17,7 @@ export function CameraCapture({ onClose }: Props) {
   const [capturing, setCapturing] = useState(false);
   const [capturedCount, setCapturedCount] = useState(0);
   const [recentThumb, setRecentThumb] = useState<string | null>(null);
+  const [lastPhotoId, setLastPhotoId] = useState<string | null>(null);
   const captureCountRef = useRef(0);
 
   useEffect(() => {
@@ -55,6 +56,7 @@ export function CameraCapture({ onClose }: Props) {
           const id = generateId();
           const now = Date.now();
           captureCountRef.current += 1;
+          setLastPhotoId(id);
 
           // --- Step A: Add to gallery immediately (no wait for compression) ---
           const photo: PhotoRecord = {
@@ -177,7 +179,7 @@ export function CameraCapture({ onClose }: Props) {
 
         {/* Done button */}
         <button
-          onClick={() => { stop(); onClose(); }}
+          onClick={() => { stop(); onClose(lastPhotoId); }}
           className="w-14 h-14 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center"
         >
           <CheckCircle className="w-6 h-6 text-white" />
