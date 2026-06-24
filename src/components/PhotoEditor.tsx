@@ -93,24 +93,24 @@ export function PhotoEditor({ photo: initialPhoto, onClose }: Props) {
       if (photo.localBlobUrl) {
         const response = await fetch(photo.localBlobUrl);
         const blob = await response.blob();
-        const file = new File([blob], `${photo.title || "photo"}.jpg`, { type: "image/jpeg" });
+        const file = new File([blob], `${title || "photo"}.jpg`, { type: "image/jpeg" });
         
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({
-            title: photo.title,
-            ...(photo.comment ? { text: photo.comment } : {}),
+            title: title,
+            ...(comment ? { text: comment } : {}),
             files: [file],
           });
         } else {
           if (photo.imageUrl) {
-            const text = encodeURIComponent(`*${photo.title}*\n${photo.comment || ""}\n${photo.imageUrl}`);
+            const text = encodeURIComponent(`*${title}*\n${comment || ""}\n${photo.imageUrl}`);
             window.open(`https://wa.me/?text=${text}`, "_blank");
           } else {
             toast.error("File sharing not supported on this device. Wait for upload to share link.");
           }
         }
       } else if (photo.imageUrl) {
-        const text = encodeURIComponent(`*${photo.title}*\n${photo.comment || ""}\n${photo.imageUrl}`);
+        const text = encodeURIComponent(`*${title}*\n${comment || ""}\n${photo.imageUrl}`);
         window.open(`https://wa.me/?text=${text}`, "_blank");
       }
     } catch (e) {

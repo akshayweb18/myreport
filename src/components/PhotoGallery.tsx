@@ -1,9 +1,11 @@
 "use client";
 import { useState, useMemo } from "react";
 import { usePhotosStore } from "@/stores/photosStore";
-import { Search, Filter, Trash2, Edit3, Image as ImageIcon, MapPin, CheckCircle2, Camera } from "lucide-react";
+import { Search, Filter, Trash2, Edit3, Image as ImageIcon, MapPin, CheckCircle2, Camera, FileText } from "lucide-react";
 import type { PhotoMetadata, AppView } from "@/types";
 import { formatDate } from "@/lib/imageUtils";
+import { useReportsStore } from "@/stores/reportsStore";
+import { toast } from "sonner";
 
 interface Props {
   onNavigate: (v: AppView) => void;
@@ -13,6 +15,8 @@ interface Props {
 export function PhotoGallery({ onNavigate, onEditPhoto }: Props) {
   const { photos, selectedIds, toggleSelect, selectAll, clearSelection, bulkRemove, searchQuery, setSearchQuery, filterCategory, setFilterCategory, getFilteredPhotos } = usePhotosStore();
   const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [layout, setLayout] = useState<number>(4);
+  const [isExporting, setIsExporting] = useState(false);
 
   const filteredPhotos = getFilteredPhotos();
   
@@ -33,6 +37,41 @@ export function PhotoGallery({ onNavigate, onEditPhoto }: Props) {
     if (confirm(`Delete ${selectedIds.size} photos?`)) {
       bulkRemove(Array.from(selectedIds));
       setIsSelectionMode(false);
+    }
+  };
+
+  const handleBulkPPT = async () => {
+    try {
+      toast.loading("Generating presentation...", { id: "bulk-ppt" });
+      setIsExporting(true);
+      
+      const { createDraft, buildSlides } = useReportsStore.getState();
+      await createDraft({
+        reportName: `Gallery Export ${new Date().toLocaleDateString().replace(/\//g, "-")}`,
+        projectName: "",
+        inspectorName: "",
+        clientName: "",
+        reportDate: new Date().toLocaleDateString(),
+      });
+      
+      buildSlides(Array.from(selectedIds), layout);
+      
+      setTimeout(async () => {
+        const { generatePPTX } = await import("@/lib/pptExporter");
+        const map = new Map(photos.map((p) => [p.id, p]));
+        const currentDraft = useReportsStore.getState().activeDraft;
+        if (currentDraft) {
+           await generatePPTX(currentDraft, map);
+           toast.success("PPT Downloaded!", { id: "bulk-ppt" });
+        }
+        setIsExporting(false);
+        setIsSelectionMode(false);
+        clearSelection();
+      }, 500);
+
+    } catch (err) {
+      toast.error("Failed to generate report", { id: "bulk-ppt" });
+      setIsExporting(false);
     }
   };
 
@@ -158,6 +197,34 @@ export function PhotoGallery({ onNavigate, onEditPhoto }: Props) {
         >
           <Camera className="w-6 h-6" />
         </button>
+      )}
+
+      {/* ── Quick PPT Actions FAB ── */}
+      {isSelectionMode && selectedIds.size > 0 && (
+        <div className="fixed bottom-20 left-4 right-4 bg-background/95 backdrop-blur border border-border rounded-2xl shadow-2xl p-3 z-30 animate-slide-up">
+           <div className="flex items-center justify-between mb-3 px-1">
+             <span className="text-xs font-bold uppercase text-muted-foreground tracking-wide">Quick PPT Layout</span>
+             <div className="flex gap-2">
+               {[1, 2, 3, 4].map(num => (
+                 <button 
+                   key={num}
+                   onClick={() => setLayout(num)} 
+                   className={`w-9 h-9 rounded-lg flex items-center justify-center border font-bold transition-colors ${layout === num ? 'bg-primary border-primary text-primary-foreground shadow-md' : 'bg-muted border-transparent text-muted-foreground hover:bg-muted/80'}`}
+                 >
+                   {num}
+                 </button>
+               ))}
+             </div>
+           </div>
+           <button 
+             onClick={handleBulkPPT} 
+             disabled={isExporting} 
+             className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-bold flex items-center justify-center gap-2 shadow-md disabled:opacity-70"
+           >
+             <FileText className="w-5 h-5" />
+             {isExporting ? "Generating..." : "Generate PPT"}
+           </button>
+        </div>
       )}
     </div>
   );
