@@ -251,9 +251,13 @@ export async function generatePPTX(
       });
 
       if (photo.comment) {
+        // Calculate remaining height to the bottom of the card, minus some padding
+        const commentStartY = metaStart + (lineH + 0.04) * 2;
+        const remainingH = (cardY + cardH) - commentStartY - 0.04; // 0.04 inch bottom padding
+        
         slide.addText(photo.comment, {
-          x: metaX, y: metaStart + (lineH + 0.04) * 2,
-          w: metaW, h: lineH * 2,
+          x: metaX, y: commentStartY,
+          w: metaW, h: Math.max(remainingH, lineH * 2), // Ensure at least 2 lines of height
           fontSize: 8, color: CLR_REMARK, align: "left", valign: "top", wrap: true,
         });
       }
