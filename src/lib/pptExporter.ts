@@ -146,10 +146,11 @@ export async function generatePPTX(
       const cardX = MARGIN_X + col * (cardW + GAP_X);
       const cardY = HEADER_H + MARGIN_TOP + row * (cardH + GAP_Y);
 
-      // Card outer border (invisible, just for background fill)
+      // Card outer border
       slide.addShape(pptx.ShapeType.rect, {
         x: cardX, y: cardY, w: cardW, h: cardH,
         fill: { color: CLR_WHITE },
+        line: { color: CLR_BORDER, width: 0.75 },
       });
 
       // Serial number e.g. "(1)"
