@@ -169,10 +169,8 @@ export async function generatePPTX(
         fill: { color: CLR_WHITE },
       });
 
-      // Track actual image bounds to align metadata perfectly
+      // Track actual image bottom to place metadata immediately below it
       let actualImgBottom = imgBoxY + imgBoxH; // default fallback
-      let actualImgLeft   = cardX + 0.08;      // default fallback
-      let actualImgWidth  = cardW - 0.16;      // default fallback
 
       try {
         // 1) Try to load from IndexedDB blob (most reliable)
@@ -212,9 +210,6 @@ export async function generatePPTX(
           slide.addImage({ data: png.dataUrl, x: innerX + dx, y: innerY + dy, w, h });
           // Metadata starts right after the actual rendered image bottom
           actualImgBottom = innerY + dy + h;
-          // Align text exactly with the left edge of the image
-          actualImgLeft = innerX + dx;
-          actualImgWidth = w;
         } else if (fallback) {
           slide.addImage({
             path: fallback, x: imgBoxX, y: imgBoxY, w: imgBoxW, h: imgBoxH,
@@ -231,9 +226,8 @@ export async function generatePPTX(
       }
 
       // ── Metadata directly below actual image bottom (no wasted gap) ──────
-      // Use actual image left edge if available, otherwise fallback to card margin
-      const metaX     = actualImgLeft;
-      const metaW     = actualImgWidth;
+      const metaX     = cardX + 0.08;
+      const metaW     = cardW - 0.16;
       const metaStart = actualImgBottom + 0.06;  // small gap after actual image
       const lineH     = 0.17;
 
