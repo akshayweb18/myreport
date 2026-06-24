@@ -42,10 +42,18 @@ export const usePhotosStore = create<PhotosState>()((set, get) => ({
   loadPhotos: async () => {
     set({ isLoading: true });
     const records = await getAllPhotos();
-    const photos: PhotoMetadata[] = records.map(({ imageBlob: _, thumbnailBlob: __, ...meta }) => ({
-      ...meta,
-      localBlobUrl: meta.localBlobUrl ?? ((_ as Blob) ? URL.createObjectURL(_ as Blob) : undefined),
-    }));
+    const photos: PhotoMetadata[] = records.map((record) => {
+      const { imageBlob, thumbnailBlob, localBlobUrl, ...meta } = record;
+      // Stale blob URLs from previous sessions must be ignored.
+      // We generate a fresh URL from the stored blobs.
+      const blobToUse = thumbnailBlob || imageBlob;
+      const freshBlobUrl = blobToUse ? URL.createObjectURL(blobToUse) : undefined;
+      
+      return {
+        ...meta,
+        localBlobUrl: freshBlobUrl || localBlobUrl,
+      };
+    });
     set({ photos, isLoading: false });
   },
 
