@@ -30,12 +30,17 @@ const CLR_DIVIDER    = "DDDDDD";
 
 interface PngResult { dataUrl: string; naturalWidth: number; naturalHeight: number; }
 
+/**
+ * Re-renders any blob through canvas → clean sRGB JPEG.
+ * Uses JPEG (not PNG) to keep file sizes small so the download never hangs.
+ * MAX cap at 1280px prevents memory exhaustion on large horizontal photos.
+ */
 function blobToCanvasPng(blob: Blob): Promise<PngResult> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(blob);
     img.onload = () => {
-      const MAX = 1920;
+      const MAX = 1280;   // JPEG is already lossy, 1280px is plenty for PPT
       let w = img.naturalWidth, h = img.naturalHeight;
       if (w > MAX || h > MAX) {
         if (w > h) { h = Math.round((h * MAX) / w); w = MAX; }
@@ -43,17 +48,20 @@ function blobToCanvasPng(blob: Blob): Promise<PngResult> {
       }
       const canvas = document.createElement("canvas");
       canvas.width = w; canvas.height = h;
-      const ctx = canvas.getContext("2d")!;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { URL.revokeObjectURL(url); reject(new Error("No canvas ctx")); return; }
       ctx.fillStyle = "#FFFFFF";
       ctx.fillRect(0, 0, w, h);
       ctx.drawImage(img, 0, 0, w, h);
       URL.revokeObjectURL(url);
-      resolve({ dataUrl: canvas.toDataURL("image/png"), naturalWidth: w, naturalHeight: h });
+      // JPEG keeps file small; PowerPoint handles it fine
+      resolve({ dataUrl: canvas.toDataURL("image/jpeg", 0.88), naturalWidth: w, naturalHeight: h });
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image load failed")); };
     img.src = url;
   });
 }
+
 
 function containFit(cellW: number, cellH: number, natW: number, natH: number) {
   const imgAR  = natW / natH;
@@ -164,15 +172,30 @@ export async function generatePPTX(
 
       // Place image with contain + white padding
       try {
-        const record = await getPhoto(photoId);
+        // 1) Try to load from IndexedDB blob (most reliable)
         let png: PngResult | undefined;
         let fallback: string | undefined;
-        if (record?.imageBlob) {
+
+        const record = await getPhoto(photoId);
+        if (record?.imageBlob && record.imageBlob.size > 0) {
           png = await blobToCanvasPng(record.imageBlob);
-        } else if (photo.localBlobUrl) {
-          const resp = await fetch(photo.localBlobUrl);
-          png = await blobToCanvasPng(await resp.blob());
-        } else if (photo.imageUrl) {
+        }
+
+        // 2) Fallback: fetch from object URL (may fail if revoked)
+        if (!png && photo.localBlobUrl) {
+          try {
+            const resp = await fetch(photo.localBlobUrl);
+            if (resp.ok) {
+              const blob = await resp.blob();
+              if (blob.size > 0) png = await blobToCanvasPng(blob);
+            }
+          } catch {
+            // object URL was revoked – fall through to Firebase URL
+          }
+        }
+
+        // 3) Last resort: Firebase/remote URL
+        if (!png && photo.imageUrl) {
           fallback = photo.imageUrl;
         }
 
