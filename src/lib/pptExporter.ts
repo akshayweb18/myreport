@@ -146,11 +146,10 @@ export async function generatePPTX(
       const cardX = MARGIN_X + col * (cardW + GAP_X);
       const cardY = HEADER_H + MARGIN_TOP + row * (cardH + GAP_Y);
 
-      // Card outer border
+      // Card outer border (invisible, just for background fill)
       slide.addShape(pptx.ShapeType.rect, {
         x: cardX, y: cardY, w: cardW, h: cardH,
         fill: { color: CLR_WHITE },
-        line: { color: CLR_BORDER, width: 0.75 },
       });
 
       // Serial number e.g. "(1)"
@@ -160,14 +159,13 @@ export async function generatePPTX(
         fontSize: 8, color: CLR_SERIAL, align: "left", valign: "top",
       });
 
-      // Image box with thin border
+      // Image box (invisible, just for background fill)
       const imgBoxX = cardX + 0.06;
       const imgBoxY = cardY + SERIAL_H + 0.04;
       const imgBoxW = cardW - 0.12;
       slide.addShape(pptx.ShapeType.rect, {
         x: imgBoxX, y: imgBoxY, w: imgBoxW, h: imgBoxH,
         fill: { color: CLR_WHITE },
-        line: { color: CLR_BORDER, width: 0.5 },
       });
 
       // Place image with contain + white padding
