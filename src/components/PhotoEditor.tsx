@@ -162,12 +162,12 @@ export function PhotoEditor({ photo: initialPhoto, onClose }: Props) {
 
       <div className="flex-1 overflow-y-auto">
         {/* ── Image Preview ── */}
-        <div className="bg-muted aspect-video w-full relative overflow-hidden flex items-center justify-center">
+        <div className="bg-[#1e1e1e] w-full relative flex items-center justify-center p-4 min-h-[300px]">
           {photo.localBlobUrl && (
              <img 
                src={photo.localBlobUrl} 
                alt={photo.title} 
-               className={`w-full h-full object-contain transition-opacity duration-300 ${isRotating ? "opacity-50" : "opacity-100"}`} 
+               className={`max-w-full max-h-[50vh] object-contain rounded-md shadow-lg transition-opacity duration-300 ${isRotating ? "opacity-50" : "opacity-100"}`} 
              />
           )}
           {isRotating && (
