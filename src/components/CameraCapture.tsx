@@ -154,7 +154,7 @@ export function CameraCapture({ onClose }: Props) {
           playsInline
           muted
           onLoadedMetadata={async () => { if (!isActive) await start(); }}
-          className="w-full h-full object-contain"
+          className="w-full h-full object-cover"
           style={{ display: isActive ? "block" : "none" }}
         />
 

@@ -162,7 +162,7 @@ export function PhotoEditor({ photo: initialPhoto, onClose }: Props) {
 
       <div className="flex-1 overflow-y-auto">
         {/* ── Image Preview ── */}
-        <div className="bg-muted w-full relative overflow-hidden flex items-center justify-center p-2" style={{ minHeight: '300px', maxHeight: '50vh' }}>
+        <div className="bg-muted aspect-video w-full relative overflow-hidden flex items-center justify-center">
           {photo.localBlobUrl && (
              <img 
                src={photo.localBlobUrl} 
