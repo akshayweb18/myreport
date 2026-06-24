@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { usePhotosStore } from "@/stores/photosStore";
 import { Search, Filter, Trash2, Edit3, Image as ImageIcon, MapPin, CheckCircle2, Camera, FileText } from "lucide-react";
-import type { PhotoMetadata, AppView } from "@/types";
+import type { PhotoMetadata, AppView, LayoutType } from "@/types";
 import { formatDate } from "@/lib/imageUtils";
 import { useReportsStore } from "@/stores/reportsStore";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ interface Props {
 export function PhotoGallery({ onNavigate, onEditPhoto }: Props) {
   const { photos, selectedIds, toggleSelect, selectAll, clearSelection, bulkRemove, searchQuery, setSearchQuery, filterCategory, setFilterCategory, getFilteredPhotos } = usePhotosStore();
   const [isSelectionMode, setIsSelectionMode] = useState(false);
-  const [layout, setLayout] = useState<number>(4);
+  const [layout, setLayout] = useState<LayoutType>(4);
   const [isExporting, setIsExporting] = useState(false);
 
   const filteredPhotos = getFilteredPhotos();
@@ -208,7 +208,7 @@ export function PhotoGallery({ onNavigate, onEditPhoto }: Props) {
                {[1, 2, 3, 4].map(num => (
                  <button 
                    key={num}
-                   onClick={() => setLayout(num)} 
+                   onClick={() => setLayout(num as LayoutType)} 
                    className={`w-9 h-9 rounded-lg flex items-center justify-center border font-bold transition-colors ${layout === num ? 'bg-primary border-primary text-primary-foreground shadow-md' : 'bg-muted border-transparent text-muted-foreground hover:bg-muted/80'}`}
                  >
                    {num}
