@@ -5,7 +5,7 @@ import { useCamera } from "@/hooks/useCamera";
 import { usePhotosStore } from "@/stores/photosStore";
 import { useUploadStore } from "@/stores/uploadStore";
 import { compressImage, fastThumbnail, generateId, getCurrentLocation } from "@/lib/imageUtils";
-import type { PhotoRecord } from "@/types";
+import type { PhotoRecord, PhotoMetadata } from "@/types";
 import { toast } from "sonner";
 
 interface Props { onClose: (lastPhoto?: PhotoMetadata | null) => void; }
