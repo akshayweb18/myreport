@@ -97,7 +97,7 @@ export function CameraCapture({ onClose }: Props) {
     <div className="fixed inset-0 z-50 bg-black flex flex-col animate-fade-in">
       {/* ── Top bar ── */}
       <div className="absolute top-0 inset-x-0 z-10 flex items-center justify-between px-4 pt-12 pb-4 bg-gradient-to-b from-black/70 to-transparent safe-top">
-        <button onClick={onClose} className="w-10 h-10 rounded-full glass flex items-center justify-center">
+        <button onClick={() => onClose()} className="w-10 h-10 rounded-full glass flex items-center justify-center">
           <X className="w-5 h-5 text-white" />
         </button>
         {capturedCount > 0 && (
