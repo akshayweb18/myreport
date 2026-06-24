@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import { usePhotosStore } from "@/stores/photosStore";
-import { Search, Filter, Trash2, Edit3, Image as ImageIcon, MapPin, CheckCircle2 } from "lucide-react";
+import { Search, Filter, Trash2, Edit3, Image as ImageIcon, MapPin, CheckCircle2, Camera } from "lucide-react";
 import type { PhotoMetadata, AppView } from "@/types";
 import { formatDate } from "@/lib/imageUtils";
 
@@ -148,6 +148,16 @@ export function PhotoGallery({ onNavigate, onEditPhoto }: Props) {
            <p className="font-medium">No photos found</p>
            {searchQuery && <p className="text-sm mt-1">Try adjusting your search or filters.</p>}
         </div>
+      )}
+
+      {/* ── Camera FAB ── */}
+      {!isSelectionMode && (
+        <button
+          onClick={() => onNavigate("camera")}
+          className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-30"
+        >
+          <Camera className="w-6 h-6" />
+        </button>
       )}
     </div>
   );

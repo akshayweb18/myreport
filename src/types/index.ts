@@ -118,7 +118,7 @@ export interface AppSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
   defaultLayout: 6,
-  defaultOrientation: "landscape",
+  defaultOrientation: "portrait",
   imageQuality: 0.8,
   maxImageWidth: 1920,
   showWatermark: false,

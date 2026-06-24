@@ -46,7 +46,7 @@ export default function App() {
 
       {/* ── Overlays ── */}
       {currentView === "camera" && (
-        <CameraCapture onClose={() => setCurrentView("dashboard")} />
+        <CameraCapture onClose={() => setCurrentView("gallery")} />
       )}
       
       {editingPhoto && (

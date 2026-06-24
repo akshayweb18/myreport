@@ -91,7 +91,21 @@ export function ReportBuilder({ onNavigate }: Props) {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Select Photos</h2>
-                <span className="text-xs font-medium text-primary">{selectedPhotos.size} selected</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-primary">{selectedPhotos.size} selected</span>
+                  <button
+                    onClick={() => {
+                      if (selectedPhotos.size === photos.length && photos.length > 0) {
+                        setSelectedPhotos(new Set());
+                      } else {
+                        setSelectedPhotos(new Set(photos.map(p => p.id)));
+                      }
+                    }}
+                    className="text-xs font-semibold text-primary/80 hover:text-primary transition-colors"
+                  >
+                    {selectedPhotos.size === photos.length && photos.length > 0 ? "Deselect All" : "Select All"}
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {photos.map((photo) => (
