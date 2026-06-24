@@ -171,6 +171,9 @@ export async function generatePPTX(
       });
 
       // Place image with contain + white padding
+      // Track actual image bottom to place metadata immediately below it
+      let actualImgBottom = imgBoxY + imgBoxH; // default fallback
+
       try {
         // 1) Try to load from IndexedDB blob (most reliable)
         let png: PngResult | undefined;
@@ -207,11 +210,15 @@ export async function generatePPTX(
         if (png) {
           const { w, h, dx, dy } = containFit(innerW, innerH, png.naturalWidth, png.naturalHeight);
           slide.addImage({ data: png.dataUrl, x: innerX + dx, y: innerY + dy, w, h });
+          // Metadata starts right after the actual rendered image bottom
+          actualImgBottom = innerY + dy + h;
         } else if (fallback) {
           slide.addImage({
             path: fallback, x: imgBoxX, y: imgBoxY, w: imgBoxW, h: imgBoxH,
             sizing: { type: "contain", w: imgBoxW, h: imgBoxH },
           });
+          // Can't know exact fit bottom for remote URL, use imgBox bottom
+          actualImgBottom = imgBoxY + imgBoxH;
         }
       } catch {
         slide.addText("Image unavailable", {
@@ -220,10 +227,10 @@ export async function generatePPTX(
         });
       }
 
-      // ── Metadata below image ─────────────────────────────────────────────
+      // ── Metadata directly below actual image bottom (no wasted gap) ──────
       const metaX     = cardX + 0.08;
       const metaW     = cardW - 0.16;
-      const metaStart = imgBoxY + imgBoxH + 0.06;
+      const metaStart = actualImgBottom + 0.06;  // small gap after actual image
       const lineH     = 0.17;
 
       if (photo.title) {
@@ -246,7 +253,7 @@ export async function generatePPTX(
       if (photo.comment) {
         slide.addText(photo.comment, {
           x: metaX, y: metaStart + (lineH + 0.04) * 2,
-          w: metaW, h: Math.max(metaH - (lineH + 0.04) * 2, lineH),
+          w: metaW, h: lineH * 2,
           fontSize: 8, color: CLR_REMARK, align: "left", valign: "top", wrap: true,
         });
       }
