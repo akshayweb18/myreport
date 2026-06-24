@@ -8,7 +8,7 @@ import { compressImage, fastThumbnail, generateId, getCurrentLocation } from "@/
 import type { PhotoRecord } from "@/types";
 import { toast } from "sonner";
 
-interface Props { onClose: (lastPhotoId?: string | null) => void; }
+interface Props { onClose: (lastPhoto?: PhotoMetadata | null) => void; }
 
 export function CameraCapture({ onClose }: Props) {
   const { videoRef, isActive, error, start, stop, capture, flipCamera, facingMode } = useCamera();
@@ -17,8 +17,8 @@ export function CameraCapture({ onClose }: Props) {
   const [capturing, setCapturing] = useState(false);
   const [capturedCount, setCapturedCount] = useState(0);
   const [recentThumb, setRecentThumb] = useState<string | null>(null);
-  const [lastPhotoId, setLastPhotoId] = useState<string | null>(null);
   const captureCountRef = useRef(0);
+  const lastPhotoRef = useRef<PhotoMetadata | null>(null);
 
   useEffect(() => {
     start();
@@ -35,13 +35,29 @@ export function CameraCapture({ onClose }: Props) {
         return;
       }
 
-      // 1. Instant Visual Feedback
+      const id = generateId();
+      const now = Date.now();
+      captureCountRef.current += 1;
+      
       const thumbUrl = URL.createObjectURL(blob);
       setRecentThumb(thumbUrl);
       setTimeout(() => {
         URL.revokeObjectURL(thumbUrl);
         setRecentThumb(null);
       }, 1800);
+
+      const metadata = {
+        id,
+        title: `Photo ${captureCountRef.current}`,
+        comment: "",
+        location: "", // will update later
+        createdAt: now,
+        syncStatus: "pending" as const,
+        order: now,
+        localBlobUrl: thumbUrl,
+      };
+      
+      lastPhotoRef.current = metadata;
 
       setCapturedCount((c) => c + 1);
       toast.success("Photo captured!");
@@ -52,25 +68,21 @@ export function CameraCapture({ onClose }: Props) {
       // 3. Save to gallery INSTANTLY, then process in background
       (async () => {
         try {
-          const location = await getCurrentLocation();
-          const id = generateId();
-          const now = Date.now();
-          captureCountRef.current += 1;
-          setLastPhotoId(id);
-
-          // --- Step A: Add to gallery immediately (no wait for compression) ---
+          // --- Step A: Add to gallery immediately ---
           const photo: PhotoRecord = {
-            id,
-            title: `Photo ${captureCountRef.current}`,
-            comment: "",
-            location,
-            createdAt: now,
-            syncStatus: "pending",
-            order: now,
+            ...metadata,
             imageBlob: blob,          // Original quality for PPT
             thumbnailBlob: blob,      // Use original as thumb placeholder
           };
           await addPhoto(photo);
+
+          // Get location in background and update
+          getCurrentLocation().then((loc) => {
+             if (loc) {
+               import("@/lib/db").then(({ updatePhoto }) => updatePhoto(id, { location: loc }));
+               // We should also ideally update the store, but photo editor can handle the refresh
+             }
+          }).catch(console.error);
 
           // --- Step B: Fast canvas thumbnail (~50ms) ---
           const thumbnail = await fastThumbnail(blob, 400);
@@ -179,7 +191,7 @@ export function CameraCapture({ onClose }: Props) {
 
         {/* Done button */}
         <button
-          onClick={() => { stop(); onClose(lastPhotoId); }}
+          onClick={() => { stop(); onClose(lastPhotoRef.current); }}
           className="w-14 h-14 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center"
         >
           <CheckCircle className="w-6 h-6 text-white" />

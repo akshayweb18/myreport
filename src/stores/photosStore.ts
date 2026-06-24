@@ -51,7 +51,6 @@ export const usePhotosStore = create<PhotosState>()((set, get) => ({
 
   addPhoto: async (photo: PhotoRecord) => {
     const blobUrl = URL.createObjectURL(photo.imageBlob);
-    await savePhoto(photo);
     const meta: PhotoMetadata = {
       id: photo.id,
       title: photo.title,
@@ -65,7 +64,12 @@ export const usePhotosStore = create<PhotosState>()((set, get) => ({
       syncStatus: photo.syncStatus,
       order: photo.order,
     };
-    set((state) => ({ photos: [...state.photos, meta] }));
+    
+    // Optimistic UI update
+    set((state) => ({ photos: [meta, ...state.photos] }));
+    
+    // Background save to IndexedDB
+    await savePhoto(photo);
   },
 
   updatePhotoMeta: async (id, updates) => {

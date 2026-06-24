@@ -47,12 +47,10 @@ export default function App() {
 
       {/* ── Overlays ── */}
       {currentView === "camera" && (
-        <CameraCapture onClose={(lastPhotoId) => {
+        <CameraCapture onClose={(lastPhoto) => {
           setCurrentView("gallery");
-          if (lastPhotoId) {
-            const store = usePhotosStore.getState();
-            const photo = store.photos.find(p => p.id === lastPhotoId);
-            if (photo) setEditingPhoto(photo);
+          if (lastPhoto) {
+            setEditingPhoto(lastPhoto);
           }
         }} />
       )}
